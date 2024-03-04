@@ -20,7 +20,7 @@ class Player {
   }
   
   draw(ctx, players){
-	  ctx.clearRect(0, 0, 10, 10);
+	  ctx.clearRect(0, 0, 11, 11);
 	  
 	  for (let playerId in players) {
         const player = players[playerId];
