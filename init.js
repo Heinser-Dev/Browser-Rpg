@@ -53,7 +53,22 @@
 	function drawAllPlayers(){
 	  database.ref('players').once('value', (snapshot) => {
         const players = snapshot.val();
-        player.draw(ctx, players);
+		const currentUserPlayer = players[playerId];
+        if (currentUserPlayer) { // Verifique se o jogador do usuário existe
+            // Calcule a posição central da câmera com base na posição do jogador do usuário
+            const cameraX = currentUserPlayer.x - Math.floor(canvas.width / 2);
+            const cameraY = currentUserPlayer.y - Math.floor(canvas.height / 2);
+
+            // Limpe o canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Desenhe todos os jogadores com base nas posições relativas à posição da câmera
+            for (let playerId in players) {
+                const player = players[playerId];
+                ctx.fillStyle = player.color;
+                ctx.fillRect(player.x - cameraX, player.y - cameraY, 1, 1);
+            }
+        }
       });
 	}
 	
