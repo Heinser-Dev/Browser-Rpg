@@ -1,0 +1,57 @@
+<html>
+  <head>
+    <style>
+	  body {
+	    display: flex;
+		align-items: center;
+		justify-content: center;
+	  }
+	  canvas {
+	    transform: scale(30);
+		image-rendering:  pixelated;
+	  }
+	  .game-container {
+	    position: absolute;
+	  }
+	  .chat {
+	    border: 1px solid gray;
+		width: 400px;
+		height: 100px;
+		position: fixed;
+		top: 0;
+		left: 0;
+		margin: 20px;
+		display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+	  }
+	  .messages {
+	    overflow-y: scroll;
+		height: 100%;
+	  }
+	  
+	  .green {color: green;} .red {color: red;} .normal {color: #3d3d3d;}
+	</style>
+  </head>
+  <body>
+    <div class="chat">
+	  <div class="messages"></div>
+	  <div style="display: flex; justify-content: space-between;">
+	    <input id="message" type="text" style="width: 100%;">
+		<button id="sendMessage" onclick="">Enviar</button>
+	  </div>
+	</div>
+    <div class"game-container">
+      <canvas style="border: 1px solid #3d3d3d" width="10px" height="10px"></canvas>
+	</div>
+	<script src="https://www.gstatic.com/firebasejs/6.1.1/firebase-app.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/6.1.1/firebase-database.js"></script>
+	<script src="firebase.js"></script>
+	<script src="Player.js"></script>
+	<script src="init.js"></script>
+	<!-- <script src="Sprite.js"></script>
+	<script src="GameObject.js"></script>
+	<script src="Overworld.js"></script>
+	<script src="init.js"></script> -->
+  </body>
+</html>
