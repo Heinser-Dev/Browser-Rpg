@@ -17,22 +17,39 @@
 	const database = firebase.database();
 	
 	
-
+    const character = new Image();
+	character.src = 'characters.png';
+	character.onload = ()=>{
+		character.isLoaded = true;
+	};
 	
 	
 	const canvas = document.querySelector('canvas');
 	const ctx = canvas.getContext("2d");
-	const color = prompt("Escolha uma cor");
+	ctx.imageSmoothingEnabled = false;
+	ctx.scale(3, 3);
+	
+	const nickname = prompt("Escolha um apelido");
 	
 	const playerId = database.ref('players').push().key;
 	const player = new Player({
-		color: color,
+		nickname: nickname,
+		img: {
+			x: 2,
+			y: 303
+		}
 	}, database, playerId);
 	database.ref('players/' + playerId).set({
       x: player.x,
       y: player.y,
-	  color: player.color
+	  color: player.color,
+	  nickname: player.nickname,
+	  imgX: player.img.x,
+	  imgY: player.img.y
     });
+	
+	
+
 	
 	function sendChatMessage(content, color){
 	  const message = database.ref('chat').push();
@@ -44,66 +61,83 @@
 	  document.querySelector('.messages').scrollTop = document.querySelector('.messages').scrollHeight;
 	}
 	
-	sendChatMessage(playerId + " entrou", "green");
+	sendChatMessage(nickname + " entrou", "green");
 	
 	function update(){
 		
 	}
 	
-	function drawAllPlayers(){
-	  database.ref('players').once('value', (snapshot) => {
-        const players = snapshot.val();
-		const currentUserPlayer = players[playerId];
-        if (currentUserPlayer) { // Verifique se o jogador do usuário existe
-            // Calcule a posição central da câmera com base na posição do jogador do usuário
-            const cameraX = currentUserPlayer.x - Math.floor(canvas.width / 2);
-            const cameraY = currentUserPlayer.y - Math.floor(canvas.height / 2);
+function drawAllObjects() {
+    // Limpar o canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Limpe o canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Desenhar todos os inimigos
+    database.ref('enemys').on('value', (enemySnapshot) => {
+        const enemys = enemySnapshot.val();
+        for (let enemyId in enemys) {
+            const enemy = enemys[enemyId];
+            ctx.drawImage(
+                character,
+                enemy.imgX, enemy.imgY,
+                26, 26,
+                enemy.x - player.cameraX - 13, enemy.y - player.cameraY - 13,
+                26, 26
+            );
 
-            // Desenhe todos os jogadores com base nas posições relativas à posição da câmera
-            for (let playerId in players) {
-                const player = players[playerId];
-                ctx.fillStyle = player.color;
-                ctx.fillRect(player.x - cameraX, player.y - cameraY, 1, 1);
-            }
+            ctx.fillStyle = enemy.color;
+            ctx.font = '6px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText("Lvl. " + enemy.level, enemy.x - player.cameraX, enemy.y - player.cameraY - 13);
         }
-      });
-	}
+    });
+
+    // Desenhar todos os jogadores
+    database.ref('players').on('value', (playerSnapshot) => {
+        const players = playerSnapshot.val();
+        for (let playerId in players) {
+            const selectedPlayer = players[playerId];
+            ctx.fillStyle = selectedPlayer.color;
+            ctx.drawImage(
+                character,
+                selectedPlayer.imgX, selectedPlayer.imgY,
+                26, 26,
+                selectedPlayer.x - player.cameraX - 13, selectedPlayer.y - player.cameraY - 13,
+                26, 26
+            );
+
+            ctx.fillStyle = selectedPlayer.color;
+            ctx.font = '6px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(selectedPlayer.nickname, selectedPlayer.x - player.cameraX, selectedPlayer.y - player.cameraY - 13);
+        }
+    });
+}
+
 	
 	function loop(){
-		update();
-		drawAllPlayers();
-		requestAnimationFrame(loop)
+		update();console.log(player)
+		drawAllObjects();
+		requestAnimationFrame(loop);
 	}
 	
 	document.addEventListener("keydown", ()=>{
-      if (event.key === "ArrowUp") {
-		const x = 0;
-		const y = -1;
-        player.update(x, y);
-      } else if (event.key === "ArrowDown") {
-        const x = 0;
-		const y = 1;
-        player.update(x, y);
-      }else if (event.key === "ArrowLeft") {
-        const x = -1;
-		const y = 0;
-        player.update(x, y);
-      }else if (event.key === "ArrowRight") {
-        const x = 1;
-		const y = 0;
-        player.update(x, y);
+      if (event.key === "ArrowUp" && player.moving === false) {
+		player.move("Up");
+      } else if (event.key === "ArrowDown" && player.moving === false) {
+        player.move("Down");
+      }else if (event.key === "ArrowLeft" && player.moving === false) {
+        player.move("Left");
+      }else if (event.key === "ArrowRight" && player.moving === false) {
+        player.move("Right");
       }
 	})
 	
 	document.getElementById('sendMessage').addEventListener('click', ()=>{
 		const message = document.getElementById('message').value;
-		sendChatMessage(playerId + ': ' + message, 'normal');
+		sendChatMessage(nickname + ': ' + message, 'normal');
 	})
 	
-	// Sincronize a posição do jogador com os dados do banco de dados em tempo real
+	// Sincronize a posiÃ§Ã£o do jogador com os dados do banco de dados em tempo real
     database.ref('players/' + playerId).on('value', (snapshot) => {
       const data = snapshot.val();
       player.x = data.x;
@@ -121,7 +155,7 @@
   
     //Excluir player ao fechar o jogo
 	database.ref('players/' + playerId).onDisconnect().remove(()=>{
-		//sendChatMessage(playerId + " saiu", "red");
+		//sendChatMessage(nickname + " saiu", "red");
 	});
 	
 	loop();
